@@ -1,0 +1,22 @@
+#include <stdio.h>
+#include <string.h>
+
+/*My Promt*/
+
+
+int main(int argc, char const *argv[])
+
+{
+
+    char request[20];
+    char ex[]= "exit";
+    for(;strcmp(request,ex) | 0;)
+     {
+        printf("> ");
+        fflush(stdout);
+        scanf("%s",request);
+     }
+    
+
+    return 0;
+}
