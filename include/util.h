@@ -5,6 +5,8 @@
 #ifndef ISODEV_UTIL_H
 #define ISODEV_UTIL_H
 
-char **parseLine(char *line);
+char *readCommand();
+
+char **parseCommand(char *line);
 
 #endif //ISODEV_UTIL_H

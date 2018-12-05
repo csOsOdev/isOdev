@@ -7,10 +7,8 @@
 
 void prompt();
 
-char *read();
-
 int execute(char **arguments);
 
-void cycle();
+int cycle();
 
 #endif //ISODEV_MAIN_H
