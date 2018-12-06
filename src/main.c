@@ -3,6 +3,7 @@
 //
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
 #include "main.h"
 #include "util.h"
 
@@ -17,7 +18,24 @@ int main(int argc, char **argv) {
 }
 
 void prompt() {
-    printf("isOdev:$ ");
+    // Calisma klasorunu tespit et
+    long max = pathconf(".", _PC_PATH_MAX);
+    size_t pathSize;
+    if (max == -1) {
+        pathSize = 4096;
+    } else if (max > 10240) {
+        pathSize = 10240;
+    } else {
+        pathSize = (size_t) max;
+    }
+    char *path = malloc(sizeof(char) * pathSize);
+    if (path == NULL) {
+        printf(ALLOCATION_ERROR);
+        exit(EXIT_FAILURE);
+    }
+    getcwd(path, pathSize); // path stringine calisma klasorunu ata
+    // Promptu yaz
+    printf("isOdev:%s$ ", path);
 }
 
 int execute(char **arguments) {

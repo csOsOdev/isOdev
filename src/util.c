@@ -7,15 +7,6 @@
 #include <string.h>
 #include "util.h"
 
-// Karakter okurken kullanilacak ilk uzunluk
-#define BUFFER_SIZE 1024
-// Argumanlari okurken kullanilacak ilk uzunluk
-#define ARGUMENTS_SIZE 30
-// Bir arguman uzunlugu icin kullanilacak ilk uzunluk
-#define ARGUMENT_SIZE 20
-// bellek ayirma hatasinda yazilacak hata mesaji
-#define ALLOCATION_ERROR "Bellek tahsis edilirken hata olustu!"
-
 char *readCommand() {
     char *line = malloc(sizeof(char) * BUFFER_SIZE);
     if (!line) {
