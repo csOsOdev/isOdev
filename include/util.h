@@ -1,6 +1,11 @@
 //
 // Created by user12043 on 03.12.2018.
 //
+// Erkam BAYINDIR
+// Muaz KARATAŞ
+// Yusuf Taha ÖZTÜRK
+// Nuh YURDUSEVEN
+// Kadir Doğuş SEÇKİN
 
 #ifndef ISODEV_UTIL_H
 #define ISODEV_UTIL_H
@@ -17,5 +22,7 @@
 char *readCommand();
 
 char **parseCommand(char *line);
+
+void printError(char *error, ...);
 
 #endif //ISODEV_UTIL_H
