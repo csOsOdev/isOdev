@@ -16,6 +16,18 @@
 #include "exec.h"
 #include "util.h"
 
+// Arka plan islemleri icin sayac
+int backgroundProcessesNumber = 0;
+int backgroundProcessesLength = BACKGROUND_PROCESSES;
+
+void addBackgroundProcess(pid_t pid) {
+    if (backgroundProcessesNumber >= backgroundProcessesLength) {
+        backgroundProcessesLength *= 2;
+        backgroundProcesses = realloc(backgroundProcesses, (sizeof(pid_t *) * backgroundProcessesLength));
+    }
+    backgroundProcesses[backgroundProcessesNumber] = pid;
+}
+
 int execute(char **args) {
     int status = 0;
     int counter = 0;
@@ -25,7 +37,9 @@ int execute(char **args) {
     if (args[0] == NULL || strcmp(args[0], "\0") == 0) {
         return status;
     } else if (strcmp(args[0], "quit") == 0 || strcmp(args[0], "exit") == 0) {
-        // TODO arka plan bekle
+        for (int i = 0; i < backgroundProcessesLength; ++i) {
+            waitpid(backgroundProcesses[i], NULL, WUNTRACED);
+        }
         exit(0);
     } else if (strcmp(args[0], "cd") == 0) {
         if (args[1] == NULL) {
@@ -38,6 +52,7 @@ int execute(char **args) {
 
     int pipeIndex = -1;
     int redirectIndex = -1;
+    int backgroundIndex = -1;
 
     while ((arg = args[counter]) != NULL) {
 //        printf("%s\n", arg);
@@ -47,6 +62,9 @@ int execute(char **args) {
         } else if ((strcmp(arg, ">") == 0) || (strcmp(arg, "<") == 0)) {
             redirectIndex = counter;
             printf("redirection: %d\n", redirectIndex);
+        } else if (strcmp(arg, "&") == 0) {
+            backgroundIndex = counter;
+            printf("background: %d\n", backgroundIndex);
         }
         counter++;
     }
@@ -59,6 +77,8 @@ int execute(char **args) {
         } else {
             launchRedirect(args, redirectIndex, counter, 0);
         }
+    } else if (backgroundIndex != -1) {
+        launchBackground(args, backgroundIndex, counter);
     } else {
         status = launchNormal(args);
     }
@@ -114,6 +134,8 @@ int launchPiped(char **args, int pipeIndex, int totalArgsNumber) {
             printError("failed to execute process: %d", getpid());
             return -1;
         }
+
+        printf("bittim");
     } else if (pid1 > 0) {
         // parent
         pid_t pid2 = fork();
@@ -172,11 +194,19 @@ int launchRedirect(char **args, int redirectIndex, int totalArgsNumber, int out)
         printf("file: %s\n", afterRedirect[0]);
         if (out) {
             FILE *ioFile = fopen(afterRedirect[0], "w");
+            if (ioFile == NULL) {
+                printError("input file does not found");
+                return -1;
+            }
             dup2(fileno(ioFile), STDOUT_FILENO);
             fclose(ioFile);
         } else {
             close(STDIN_FILENO);
             int ioFile = open(afterRedirect[0], O_RDONLY);
+            if (ioFile == -1) {
+                printError("input file does not found");
+                return -1;
+            }
             dup(ioFile);
             close(ioFile);
         }
@@ -197,7 +227,28 @@ int launchRedirect(char **args, int redirectIndex, int totalArgsNumber, int out)
     return status;
 }
 
-int launchInRedirect(char **args, int redirectIndex, int totalArgsNumber) {
+int launchBackground(char **args, int backgroundIndex, int totalArgsNumber) {
     int status = 0;
+
+    char **beforeBackground = malloc(sizeof(char *) * backgroundIndex);
+    for (int i = 0; i < backgroundIndex; ++i) {
+        beforeBackground[i] = args[i];
+    }
+    pid_t pid = fork();
+    if (pid == 0) {
+        // cocuk
+        if (execvp(beforeBackground[0], beforeBackground) == -1) {
+            printError("failed to execute process: %d", getpid());
+            return -1;
+        }
+    } else if (pid > 0) {
+        // parent
+        addBackgroundProcess(pid);
+    } else {
+        printError("fork failed");
+        exit(EXIT_FAILURE);
+    }
+
+    free(beforeBackground);
     return status;
 }

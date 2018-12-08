@@ -10,14 +10,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <exec.h>
 #include "main.h"
 #include "util.h"
 
-// Arka plan islemleri icin sayac
-int backgroundProcessesNumber = 0;
-
 int main(int argc, char **argv) {
     int status;
+    backgroundProcesses = malloc(sizeof(size_t *) * BACKGROUND_PROCESSES);
     do {
         status = cycle();
     } while (status == 0);
