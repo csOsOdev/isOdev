@@ -12,6 +12,7 @@
 #include <unistd.h>
 #include <string.h>
 #include <sys/wait.h>
+#include <fcntl.h>
 #include "exec.h"
 #include "util.h"
 
@@ -166,21 +167,23 @@ int launchRedirect(char **args, int redirectIndex, int totalArgsNumber, int out)
     }
 
     pid_t pid = fork();
-    printf("aha pid bu: %i\n", pid);
     if (pid == 0) {
         // cocuk
-        FILE *ioFile = fopen(afterRedirect[0], "r+");
+        printf("file: %s\n", afterRedirect[0]);
         if (out) {
+            FILE *ioFile = fopen(afterRedirect[0], "w");
             dup2(fileno(ioFile), STDOUT_FILENO);
+            fclose(ioFile);
         } else {
-            dup2(STDOUT_FILENO, fileno(ioFile));
+            close(STDIN_FILENO);
+            int ioFile = open(afterRedirect[0], O_RDONLY);
+            dup(ioFile);
+            close(ioFile);
         }
         if (execvp(beforeRedirect[0], beforeRedirect) == -1) {
             printError("failed to execute process: %d", getpid());
-            fclose(ioFile);
             return -1;
         }
-        fclose(ioFile);
     } else if (pid > 0) {
         // parent
         wait(NULL);
